@@ -1,0 +1,6 @@
+# Hidden data directories
+AppData/
+.insulin_tracker/
+*.auth
+*.dat
+*.json
