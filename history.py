@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 import csv
 import pdfkit
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from datetime import datetime
 
 
@@ -9,12 +11,12 @@ class HistoryTab(ttk.Frame):
     """Frame container for displaying insulin history in a tabular format"""
 
     def __init__(self, parent):
-        """Initialize the history tab frame
-        Args:
-            parent: Parent widget container
-        """
+        """Initialize the history tab frame"""
         super().__init__(parent)
-        self.create_widgets()  # Setup UI components
+        self.history_data = []  # Store history data for graphing
+        self.graph_canvas = None  # Store reference to graph
+        self.hide_graph_button = None  # Store reference to Hide Graph button
+        self.create_widgets()
 
     def create_widgets(self):
         """Create and arrange visual elements in the frame"""
@@ -35,30 +37,35 @@ class HistoryTab(ttk.Frame):
         self.tree.configure(yscrollcommand=scrollbar.set)
 
         # Grid layout configuration
-        self.tree.grid(row=0, column=0, sticky='nsew')
-        scrollbar.grid(row=0, column=1, sticky='ns')
+        self.tree.grid(row=0, column=0, columnspan=3, sticky='nsew')
+        scrollbar.grid(row=0, column=3, sticky='ns')
 
         # Configure grid resizing behavior
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # Add Export Buttons
+        # Dropdown to select graph time scale
+        self.graph_type_label = ttk.Label(self, text="Graph Time Scale:")
+        self.graph_type_label.grid(row=1, column=0, pady=5, sticky='w')
+
+        self.graph_type = ttk.Combobox(self, values=["Days", "Hours", "Minutes"], state="readonly")
+        self.graph_type.grid(row=1, column=1, pady=5, sticky='w')
+        self.graph_type.current(0)  # Default to "Days"
+
+        # Buttons
         self.export_csv_button = ttk.Button(self, text='Export CSV', command=self.export_to_csv)
-        self.export_csv_button.grid(row=1, column=0, pady=5, sticky='w')
+        self.export_csv_button.grid(row=2, column=0, pady=5, sticky='w')
 
         self.export_pdf_button = ttk.Button(self, text='Export PDF', command=self.export_to_pdf)
-        self.export_pdf_button.grid(row=1, column=0, pady=5, sticky='e')
+        self.export_pdf_button.grid(row=2, column=1, pady=5, sticky='e')
 
-        # Apply styling
-        style = ttk.Style()
-        style.configure("Treeview", font=("Arial", 12), rowheight=25)
-        style.configure("Treeview.Heading", font=("Arial", 12, "bold"))
+        self.show_graph_button = ttk.Button(self, text='Show Graph', command=self.show_graph)
+        self.show_graph_button.grid(row=2, column=2, pady=5, sticky='e')
 
     def update_history(self, history_data):
-        """Update the displayed history with new data
-        Args:
-            history_data: List of dictionaries containing history entries
-        """
+        """Update the displayed history with new data"""
+        self.history_data = history_data  # Store data for graphing
+
         # Clear existing data
         for item in self.tree.get_children():
             self.tree.delete(item)
@@ -71,7 +78,6 @@ class HistoryTab(ttk.Frame):
             dose = entry.get('dose', 'N/A')
             self.tree.insert('', 'end', values=(date, time, blood_sugar, dose))
 
-        # Handle empty data case
         if not history_data:
             self.tree.insert('', 'end', values=('No Data', '', '', ''))
 
@@ -79,7 +85,6 @@ class HistoryTab(ttk.Frame):
         """Sorts the Treeview column in ascending or descending order"""
         data = [(self.tree.set(child, col), child) for child in self.tree.get_children('')]
 
-        # Attempt to sort numerically, else sort as string
         try:
             data.sort(key=lambda t: float(t[0]) if t[0].replace('.', '', 1).isdigit() else t[0], reverse=reverse)
         except ValueError:
@@ -92,8 +97,7 @@ class HistoryTab(ttk.Frame):
 
     def export_to_csv(self):
         """Exports the Treeview data to a CSV file"""
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv",
-                                                 filetypes=[("CSV files", "*.csv")])
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if file_path:
             with open(file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
@@ -103,8 +107,7 @@ class HistoryTab(ttk.Frame):
 
     def export_to_pdf(self):
         """Exports the Treeview data to a PDF file"""
-        file_path = filedialog.asksaveasfilename(defaultextension=".pdf",
-                                                 filetypes=[("PDF files", "*.pdf")])
+        file_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
         if file_path:
             html_content = "<html><head><title>Insulin History</title></head><body>"
             html_content += "<h2>Insulin History</h2><table border='1'><tr><th>Date</th><th>Time</th><th>Blood Sugar</th><th>Dose</th></tr>"
@@ -113,9 +116,73 @@ class HistoryTab(ttk.Frame):
                 html_content += f"<tr><td>{values[0]}</td><td>{values[1]}</td><td>{values[2]}</td><td>{values[3]}</td></tr>"
             html_content += "</table></body></html>"
 
-            # Specify the wkhtmltopdf path
             config = pdfkit.configuration(wkhtmltopdf=r"C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe")
-
-            # Convert HTML to PDF
             pdfkit.from_string(html_content, file_path, configuration=config)
 
+    def show_graph(self):
+        """Displays a scatter plot of Blood Sugar Levels based on selected time scale"""
+        if not self.history_data:
+            return
+
+        selected_scale = self.graph_type.get()
+
+        x_values = []
+        blood_sugar_levels = []
+
+        for entry in self.history_data:
+            try:
+                date_obj = datetime.strptime(entry['date'], "%Y-%m-%d")
+                time_obj = datetime.strptime(entry['time'], "%H:%M")
+
+                if selected_scale == "Days":
+                    x_values.append(date_obj.strftime("%Y-%m-%d"))
+                elif selected_scale == "Hours":
+                    x_values.append(time_obj.hour + time_obj.minute / 60)
+                elif selected_scale == "Minutes":
+                    x_values.append(time_obj.hour * 60 + time_obj.minute)
+
+                blood_sugar_levels.append(float(entry['blood_sugar']))
+            except ValueError:
+                continue
+
+        fig, ax = plt.subplots()
+        ax.scatter(x_values, blood_sugar_levels, color='b', label='Blood Sugar', alpha=0.7)
+
+        ax.set_ylabel('Blood Sugar (mg/dL)')
+        ax.set_title('Blood Sugar Levels Over Time')
+
+        if selected_scale == "Days":
+            ax.set_xlabel('Date')
+            ax.set_xticklabels(x_values, rotation=45)
+        elif selected_scale == "Hours":
+            ax.set_xlabel('Time of Day (Hours)')
+        elif selected_scale == "Minutes":
+            ax.set_xlabel('Time of Day (Minutes)')
+
+        ax.grid()
+        ax.legend()
+
+        # Display graph in Tkinter
+        if self.graph_canvas:
+            self.graph_canvas.get_tk_widget().destroy()
+
+        self.graph_canvas = FigureCanvasTkAgg(fig, master=self)
+        self.graph_canvas.get_tk_widget().grid(row=3, column=0, columnspan=3, sticky='nsew')
+        self.graph_canvas.draw()
+
+        # Show Hide Graph Button
+        if self.hide_graph_button:
+            self.hide_graph_button.destroy()
+
+        self.hide_graph_button = ttk.Button(self, text='Hide Graph', command=self.hide_graph)
+        self.hide_graph_button.grid(row=4, column=1, pady=5)
+
+    def hide_graph(self):
+        """Hides the graph from the UI"""
+        if self.graph_canvas:
+            self.graph_canvas.get_tk_widget().destroy()
+            self.graph_canvas = None
+
+        if self.hide_graph_button:
+            self.hide_graph_button.destroy()
+            self.hide_graph_button = None

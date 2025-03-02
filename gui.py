@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import datetime
 from profile_manager import InsulinProfile, create_new_profile, generate_scale_ranges
-from data_manager import save_user_data, load_user_data
+import data_manager
 from history import HistoryTab
 from main import LoginWindow  # Import the LoginWindow class
 
@@ -117,13 +117,13 @@ class InsulinApp(tk.Tk):
 
     def load_profile(self):
         """Load user profile data from storage (or create a new one)"""
-        profile_data = load_user_data(self.username, "profile")  # Load profile data
+        profile_data = data_manager.load_user_data(self.username, "profile")  # Load profile data
         return InsulinProfile(
             **profile_data) if profile_data else create_new_profile()  # Return profile or create new one
 
     def save_profile(self, profile):
         """Save the user profile data to storage"""
-        save_user_data(self.username, "profile", profile.__dict__)  # Save profile data
+        data_manager.save_user_data(self.username, "profile", profile.__dict__)  # Save profile data
         messagebox.showinfo("Success", "Profile saved successfully")  # Notify user of successful save
         self.profile = profile  # Update the current profile in memory
 
@@ -163,20 +163,20 @@ class InsulinApp(tk.Tk):
             'blood_sugar': blood_sugar,  # Store the blood sugar value
             'dose': dose  # Store the calculated dose
         }
-        history = load_user_data(self.username, "history") or []  # Load existing history or initialize an empty list
+        history = data_manager.load_user_data(self.username, "history") or []  # Load existing history or initialize an empty list
         history.insert(0, entry)  # Insert the new entry at the beginning of the list
-        save_user_data(self.username, "history", history)  # Save the updated history to storage
+        data_manager.save_user_data(self.username, "history", history)  # Save the updated history to storage
         self.history_tab.update_history(history)  # Update the history tab in the UI
 
     def load_history(self):
         """Load the calculation history and display it"""
-        history = load_user_data(self.username, "history") or []  # Load history data
+        history = data_manager.load_user_data(self.username, "history") or []  # Load history data
         self.history_tab.update_history(history)  # Update the history tab with the loaded data
 
     def clear_history(self):
         """Clear the user's history after confirmation"""
         if messagebox.askyesno("Confirm", "Are you sure you want to clear your history?"):
-            save_user_data(self.username, "history", [])  # Clear the history data
+            data_manager.save_user_data(self.username, "history", [])  # Clear the history data
             self.history_tab.update_history([])  # Update the history tab in the UI
             messagebox.showinfo("Success", "History cleared successfully")  # Notify user of successful clear
 
