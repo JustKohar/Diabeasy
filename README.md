@@ -1,10 +1,14 @@
 # Insulin Tracker Application
 
-EXE INSTALLATION
+# EXE INSTALLATION
 
 https://www.dropbox.com/scl/fi/r0evd67fdoyq8dszdy5h3/InsulinHelperInstaller.zip?rlkey=66rpha4floyb0831m4hmb1j2c&st=lwftgh2q&dl=0
 
 A Python-based application for tracking insulin usage, calculating doses, and maintaining a secure history of treatments.
+
+# Website for Diabeasy
+
+https://diabeasy.org/
 
 ## Features
 - **User Authentication**: Secure login and registration system
