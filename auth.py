@@ -15,6 +15,7 @@ def hash_password(password):
 
 def validate_user(username, password):
     data_dir = get_data_dir() / "users"
+    data_dir.mkdir(parents=True, exist_ok=True)
     user_file = data_dir / f"{hashlib.sha256(username.encode()).hexdigest()}.dat"
     
     if not user_file.exists():
@@ -22,7 +23,8 @@ def validate_user(username, password):
         
     try:
         with open(user_file, "r") as f:
-            return json.load(f)["password"] == hash_password(password)
+            user_data = json.load(f)
+            return user_data.get("password") == hash_password(password)
     except Exception:
         return False
 
@@ -34,9 +36,12 @@ def register_user(username, password):
     if user_file.exists():
         return False
         
-    with open(user_file, "w") as f:
-        json.dump({
-            "username": username,
-            "password": hash_password(password)
-        }, f)
-    return True
+    try:
+        with open(user_file, "w") as f:
+            json.dump({
+                "username": username,
+                "password": hash_password(password)
+            }, f)
+        return True
+    except Exception:
+        return False
