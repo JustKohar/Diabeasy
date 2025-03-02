@@ -4,7 +4,7 @@ import datetime
 from profile_manager import InsulinProfile, create_new_profile, generate_scale_ranges
 from data_manager import save_user_data, load_user_data
 from history import HistoryTab
-
+from main import LoginWindow  # Import the LoginWindow class
 
 class InsulinApp(tk.Tk):
     def __init__(self, username):
@@ -103,6 +103,10 @@ class InsulinApp(tk.Tk):
         # Display the notebook in the main window
         self.notebook.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
 
+        # Create a logout button
+        logout_btn = ttk.Button(self, text="Logout", command=self.logout, style="TButton")
+        logout_btn.pack(pady=10)
+
     def load_profile(self):
         """Load user profile data from storage (or create a new one)"""
         profile_data = load_user_data(self.username, "profile")  # Load profile data
@@ -161,6 +165,11 @@ class InsulinApp(tk.Tk):
         """Load the calculation history and display it"""
         history = load_user_data(self.username, "history") or []  # Load history data
         self.history_tab.update_history(history)  # Update the history tab with the loaded data
+
+    def logout(self):
+        """Handle the logout logic when the user clicks the logout button"""
+        self.destroy()  # Close the current window
+        LoginWindow().mainloop()  # Reopen the login window
 
 
 class SetupTab(ttk.Frame):
