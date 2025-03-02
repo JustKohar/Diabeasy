@@ -2,7 +2,7 @@
 
 EXE INSTALLATION
 
-https://www.dropbox.com/scl/fi/du1js9tcn0exgvkiy2mtp/InsulinTracker.zip?rlkey=5e5fv0io0utgyqb8t39gy09we&st=k1drro3y&dl=0
+https://www.dropbox.com/scl/fi/r0evd67fdoyq8dszdy5h3/InsulinHelperInstaller.zip?rlkey=66rpha4floyb0831m4hmb1j2c&st=lwftgh2q&dl=0
 
 A Python-based application for tracking insulin usage, calculating doses, and maintaining a secure history of treatments.
 
