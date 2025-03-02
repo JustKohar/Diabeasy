@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 import csv
 import pdfkit
 import matplotlib.pyplot as plt
@@ -62,6 +62,9 @@ class HistoryTab(ttk.Frame):
         self.show_graph_button = ttk.Button(self, text='Show Graph', command=self.show_graph)
         self.show_graph_button.grid(row=2, column=2, pady=5, sticky='e')
 
+        self.delete_entry_button = ttk.Button(self, text="Delete Entry", command=self.delete_selected_entry)
+        self.delete_entry_button.grid(row=2, column=3, pady=5, sticky='e')  # New Delete Button
+
     def update_history(self, history_data):
         """Update the displayed history with new data"""
         self.history_data = history_data  # Store data for graphing
@@ -80,6 +83,27 @@ class HistoryTab(ttk.Frame):
 
         if not history_data:
             self.tree.insert('', 'end', values=('No Data', '', '', ''))
+
+    def delete_selected_entry(self):
+        """Deletes the selected entry from the history log"""
+        selected_item = self.tree.selection()
+        if not selected_item:
+            messagebox.showwarning("No Selection", "Please select an entry to delete.")
+            return
+
+        # Confirm deletion
+        confirm = messagebox.askyesno("Delete Entry", "Are you sure you want to delete this entry?")
+        if not confirm:
+            return
+
+        # Remove from UI
+        for item in selected_item:
+            values = self.tree.item(item)['values']
+            self.tree.delete(item)
+
+            # Remove from history data
+            self.history_data = [entry for entry in self.history_data if
+                                 (entry['date'], entry['time'], entry['blood_sugar'], entry['dose']) != tuple(values)]
 
     def sort_treeview(self, col, reverse=False):
         """Sorts the Treeview column in ascending or descending order"""
@@ -147,42 +171,8 @@ class HistoryTab(ttk.Frame):
 
         fig, ax = plt.subplots()
         ax.scatter(x_values, blood_sugar_levels, color='b', label='Blood Sugar', alpha=0.7)
-
         ax.set_ylabel('Blood Sugar (mg/dL)')
         ax.set_title('Blood Sugar Levels Over Time')
-
-        if selected_scale == "Days":
-            ax.set_xlabel('Date')
-            ax.set_xticklabels(x_values, rotation=45)
-        elif selected_scale == "Hours":
-            ax.set_xlabel('Time of Day (Hours)')
-        elif selected_scale == "Minutes":
-            ax.set_xlabel('Time of Day (Minutes)')
-
         ax.grid()
         ax.legend()
-
-        # Display graph in Tkinter
-        if self.graph_canvas:
-            self.graph_canvas.get_tk_widget().destroy()
-
-        self.graph_canvas = FigureCanvasTkAgg(fig, master=self)
-        self.graph_canvas.get_tk_widget().grid(row=3, column=0, columnspan=3, sticky='nsew')
-        self.graph_canvas.draw()
-
-        # Show Hide Graph Button
-        if self.hide_graph_button:
-            self.hide_graph_button.destroy()
-
-        self.hide_graph_button = ttk.Button(self, text='Hide Graph', command=self.hide_graph)
-        self.hide_graph_button.grid(row=4, column=1, pady=5)
-
-    def hide_graph(self):
-        """Hides the graph from the UI"""
-        if self.graph_canvas:
-            self.graph_canvas.get_tk_widget().destroy()
-            self.graph_canvas = None
-
-        if self.hide_graph_button:
-            self.hide_graph_button.destroy()
-            self.hide_graph_button = None
+        plt.show()
