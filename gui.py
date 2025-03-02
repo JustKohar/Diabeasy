@@ -140,11 +140,10 @@ class InsulinApp(tk.Tk):
                 base_dose = self.profile.dinner
 
             # Calculate additional dose based on sliding scale
-            additional_dose = 0
-            for scale in self.profile.scale_ranges:
-                if scale['low'] <= blood_sugar < scale['high']:
-                    additional_dose = scale['dose']
-                    break
+            if blood_sugar < self.profile.base_rate:
+                additional_dose = 0
+            else:
+                additional_dose = (blood_sugar - self.profile.base_rate) // self.profile.increase_per
 
             total_dose = base_dose + additional_dose  # Calculate the total insulin dose
 
