@@ -17,7 +17,9 @@ A Python-based application for tracking insulin usage, calculating doses, and ma
 - **Profile Management**: Customizable insulin profiles for different times of day
 - **Data Export**: Generate PDF reports of treatment history
 - **Responsive UI**: Clean, modern interface with intuitive controls
-- **EXE**: There is an exe able to download on computer for easy use
+- **EXE**: There is an exe able to download on the computer for easy use
+- **Data Tracking Graph**: All Data is Logged on a Graph
+- **History Deletion and Editing**: Ability to Clear History for Privacy and Remove Single Entries for Mistaken Entries
 
 ## Requirements
 
