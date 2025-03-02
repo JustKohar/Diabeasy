@@ -20,7 +20,7 @@ A Python-based application for tracking insulin usage, calculating doses, and ma
 ### Python Packages
 Install the required Python packages using pip:
 ```bash
-pip install cryptography pdfkit
+pip install cryptography pdfkit matlib matlab matplotlib
 
 ### wkhtmltopdf Installs: : Required for PDF generation
 Windows: Download from wkhtmltopdf.org
