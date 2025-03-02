@@ -4,3 +4,4 @@ AppData/
 *.auth
 *.dat
 *.json
+users.json
