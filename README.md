@@ -1,5 +1,9 @@
 # Insulin Tracker Application
 
+EXE INSTALLATION
+
+https://www.dropbox.com/scl/fi/du1js9tcn0exgvkiy2mtp/InsulinTracker.zip?rlkey=5e5fv0io0utgyqb8t39gy09we&st=k1drro3y&dl=0
+
 A Python-based application for tracking insulin usage, calculating doses, and maintaining a secure history of treatments.
 
 ## Features
@@ -16,7 +20,7 @@ A Python-based application for tracking insulin usage, calculating doses, and ma
 ### Python Packages
 Install the required Python packages using pip:
 ```bash
-pip install cryptography pdfkit
+pip install cryptography pdfkit matlib matlab matplotlib
 
 ### wkhtmltopdf Installs: : Required for PDF generation
 Windows: Download from wkhtmltopdf.org
