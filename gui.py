@@ -88,6 +88,18 @@ class InsulinApp(tk.Tk):
 
     def create_widgets(self):
         """Create the main application widgets (tabs)"""
+        # Create a frame for the logout button and pack it to the top right
+        top_frame = ttk.Frame(self)
+        top_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+
+        # Create a logout button
+        logout_btn = ttk.Button(top_frame, text="Logout", command=self.logout, style="TButton")
+        logout_btn.pack(side=tk.RIGHT)
+
+        # Create a clear history button
+        clear_history_btn = ttk.Button(top_frame, text="Clear History", command=self.clear_history, style="TButton")
+        clear_history_btn.pack(side=tk.RIGHT, padx=10)
+
         self.notebook = ttk.Notebook(self)  # Create a notebook widget for tabs
 
         # Create each of the application tabs
@@ -102,10 +114,6 @@ class InsulinApp(tk.Tk):
 
         # Display the notebook in the main window
         self.notebook.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
-
-        # Create a logout button
-        logout_btn = ttk.Button(self, text="Logout", command=self.logout, style="TButton")
-        logout_btn.pack(pady=10)
 
     def load_profile(self):
         """Load user profile data from storage (or create a new one)"""
@@ -165,6 +173,13 @@ class InsulinApp(tk.Tk):
         """Load the calculation history and display it"""
         history = load_user_data(self.username, "history") or []  # Load history data
         self.history_tab.update_history(history)  # Update the history tab with the loaded data
+
+    def clear_history(self):
+        """Clear the user's history after confirmation"""
+        if messagebox.askyesno("Confirm", "Are you sure you want to clear your history?"):
+            save_user_data(self.username, "history", [])  # Clear the history data
+            self.history_tab.update_history([])  # Update the history tab in the UI
+            messagebox.showinfo("Success", "History cleared successfully")  # Notify user of successful clear
 
     def logout(self):
         """Handle the logout logic when the user clicks the logout button"""
